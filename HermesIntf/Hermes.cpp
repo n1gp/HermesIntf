@@ -252,7 +252,7 @@ namespace HermesIntf
 		sendMSG[0] = (char) 0xEF;
 		sendMSG[1] = (char) 0xFE;
 		sendMSG[2] = (char) 0x04;
-		sendMSG[3] = (char) 0x01;
+		sendMSG[3] = (char) 0x81; // bit 7 set to disable watchdog on HL2
 
 		
 		//Configuration packet
