@@ -66,10 +66,12 @@ namespace HermesIntf
 			int max_recvrs;
 			int rxCount;
 			char recvMSG[LONG_MSG];
+			char genMSG[SHORT_MSG];
 			SOCKET sock;
 			struct sockaddr_in Hermes_addr;
 			struct sockaddr_in Recv_addr;
 			struct sockaddr_in HP_addr;
+			struct sockaddr_in Gen_addr;
 			struct sockaddr_in Data_addr[MAX_RX_COUNT];
 
 			// keep track of the selected parameters
@@ -89,7 +91,7 @@ namespace HermesIntf
 		int StopCapture2(void);
 		int StartCapture2(int RxCount, int SampleRate);
 		int Discover(void);
-		void Ping(void);
+		void FeedWDT(void);
 		int SetLO(int RecvrID, int Frequency);
 		int SetLO2(int RecvrID, int Frequency);
 

@@ -184,7 +184,7 @@ namespace HermesIntf
 		sendMSG[3] = seq & 0xFF;
 
 		sendMSG[37] = 0x08; //phase word (not freq)
-		sendMSG[38] = 0x00; //enable hardware watchdog timer RRK
+		sendMSG[38] = 0x00; //disable hardware watchdog timer
 		sendMSG[58] = 0x00; //disable PA
 		sendMSG[59] = 0x03; //enable Alexs
 
@@ -682,6 +682,8 @@ namespace HermesIntf
 					Recv_addr.sin_port = htons(RECEIVER_SPECIFIC_REGISTERS_FROM_HOST_PORT);
 					memcpy(&HP_addr, &Hermes_addr, sizeof(Hermes_addr));
 					HP_addr.sin_port = htons(HIGH_PRIORITY_FROM_HOST_PORT);
+					memcpy(&Gen_addr, &Hermes_addr, sizeof(Hermes_addr));
+					Gen_addr.sin_port = htons(GENERAL_REGISTERS_FROM_HOST_PORT);
 
 					char broadcast = '1';
 					setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &broadcast, sizeof(Hermes_addr));
@@ -702,10 +704,10 @@ namespace HermesIntf
 		return (devname != NULL) ? 0 : 1;
 	}
 
-	void Hermes::Ping()
+	void Hermes::FeedWDT()
 	{
-		// reset the Network HW watchdog timer by resending rx specific msg
-		sendto(sock, recvMSG, sizeof(recvMSG), 0, (sockaddr *)&HP_addr, sizeof(HP_addr));
+		// reset the Network HW watchdog timer by sending a general msg
+		sendto(sock, genMSG, sizeof(genMSG), 0, (sockaddr *)&Gen_addr, sizeof(Gen_addr));
 	}
 
 	int Hermes::SetLO2(int RecvrID, int Frequency)
