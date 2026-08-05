@@ -443,6 +443,7 @@ namespace HermesIntf
 
 		// wait for a while ...
 		Sleep(300);
+		long int start_time = GetTickCount();
 
 		// main loop
 		while (!gStopFlag)
@@ -554,8 +555,11 @@ namespace HermesIntf
 				default:
 					break;
 			}
+			if (GetTickCount() - start_time > 500) { // feed the WDT every 500ms
+				start_time = GetTickCount();
+				myHermes.FeedWDT();
+			}
 		}
-		//Sleep(10);
 
 		return(0);
 	}
@@ -684,14 +688,16 @@ namespace HermesIntf
 			} else if (myHermes.status != IDLE) {
 				rt_exception("HPSDR is busy sending data");
 				return;
-			} else if ((myHermes.devname == HERMES && (myHermes.ver != 18 && myHermes.ver < 24)) 
-				|| (myHermes.devname == METIS && myHermes.ver < 26) 
-				|| (myHermes.devname == ANGELIA && myHermes.ver < 19)) 
-			{
-				rt_exception("Check FPGA firmware version");
-				return;
 			}
-
+			else if (myHermes.prot_ver == 1) {
+				if ((myHermes.devname == HERMES && (myHermes.ver != 18 && myHermes.ver < 24))
+					|| (myHermes.devname == METIS && myHermes.ver < 26)
+					|| (myHermes.devname == ANGELIA && myHermes.ver < 19))
+				{
+					rt_exception("Check FPGA firmware version");
+					return;
+				}
+			}
 
 			if (gSet.RecvCount > myHermes.max_recvrs)
 			{

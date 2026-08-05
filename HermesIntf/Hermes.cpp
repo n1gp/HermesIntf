@@ -42,6 +42,7 @@ namespace HermesIntf
 
 		//reset sequence number
 		ResetSeq();
+		ResetGenSeq();
 
 		//---------------------------------------
 		// Initialize Winsock
@@ -107,9 +108,19 @@ namespace HermesIntf
 		return seq_no++;
 	}
 
+	unsigned int Hermes::NextGenSeq()
+	{
+		return gen_seq_no++;
+	}
+
 	void Hermes::ResetSeq()
 	{
 		seq_no = 0;
+	}
+
+	void Hermes::ResetGenSeq()
+	{
+		gen_seq_no = 0;
 	}
 
 	int Hermes::StopCapture(void)
@@ -140,6 +151,7 @@ namespace HermesIntf
 
 		//reset frame seq num
 		ResetSeq();
+		ResetGenSeq();
 
 		return 0;
 	}
@@ -173,25 +185,23 @@ namespace HermesIntf
 		rxCount = RxCount;
 		//start RX command
 		char sendMSG[LONG_MSG] = { 0 };
-		unsigned int seq = NextSeq();
+		unsigned int seq = NextGenSeq();
 		int i;
 		long phase;
 
-		// General msg
-		sendMSG[0] = seq >> 24 & 0xFF;
-		sendMSG[1] = seq >> 16 & 0xFF;
-		sendMSG[2] = seq >> 8 & 0xFF;
-		sendMSG[3] = seq & 0xFF;
+		// format General msg, also used by FeedWDT
+		genMSG[0] = seq >> 24 & 0xFF;
+		genMSG[1] = seq >> 16 & 0xFF;
+		genMSG[2] = seq >> 8 & 0xFF;
+		genMSG[3] = seq & 0xFF;
 
-		sendMSG[37] = 0x08; //phase word (not freq)
-		sendMSG[38] = 0x00; //enable hardware watchdog timer RRK
-		sendMSG[58] = 0x00; //disable PA
-		sendMSG[59] = 0x03; //enable Alexs
+		genMSG[37] = 0x08; //phase word (not freq)
+		genMSG[38] = 0x00; //disable hardware watchdog timer
+		genMSG[58] = 0x00; //disable PA
+		genMSG[59] = 0x03; //enable Alexs
 
-		sendto(sock, sendMSG, SHORT_MSG, 0, (sockaddr *)&Hermes_addr, sizeof(Hermes_addr));
+		sendto(sock, genMSG, SHORT_MSG, 0, (sockaddr *)&Hermes_addr, sizeof(Hermes_addr));
 		Sleep(100);
-
-		memset(sendMSG, 0, LONG_MSG);
 
 		// DDC specific msg
 		sendMSG[4] = 2; // 2 ADCs
@@ -252,8 +262,8 @@ namespace HermesIntf
 		sendMSG[0] = (char) 0xEF;
 		sendMSG[1] = (char) 0xFE;
 		sendMSG[2] = (char) 0x04;
-		sendMSG[3] = (char) 0x01;
-
+		// bit 7 set to disable watchdog on HL2
+		sendMSG[3] = (strcmp(devname, "HermesLT") == 0) ? (char) 0x81 : (char) 0x01;
 		
 		//Configuration packet
 		char cfgMSG[1032] = {0};
@@ -388,7 +398,7 @@ namespace HermesIntf
 		//write_text_to_log_file(std::to_string(WSAGetLastError())); 
 
 		// wait for discovery packet for one second
-		long int start_time = GetTickCount();
+		DWORD start_time = GetTickCount();
 		devname = NULL;
 		prot_ver = 0;
 
@@ -682,6 +692,8 @@ namespace HermesIntf
 					Recv_addr.sin_port = htons(RECEIVER_SPECIFIC_REGISTERS_FROM_HOST_PORT);
 					memcpy(&HP_addr, &Hermes_addr, sizeof(Hermes_addr));
 					HP_addr.sin_port = htons(HIGH_PRIORITY_FROM_HOST_PORT);
+					memcpy(&Gen_addr, &Hermes_addr, sizeof(Hermes_addr));
+					Gen_addr.sin_port = htons(GENERAL_REGISTERS_FROM_HOST_PORT);
 
 					char broadcast = '1';
 					setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &broadcast, sizeof(Hermes_addr));
@@ -702,10 +714,17 @@ namespace HermesIntf
 		return (devname != NULL) ? 0 : 1;
 	}
 
-	void Hermes::Ping()
+	void Hermes::FeedWDT()
 	{
-		// reset the Network HW watchdog timer by resending rx specific msg
-		sendto(sock, recvMSG, sizeof(recvMSG), 0, (sockaddr *)&HP_addr, sizeof(HP_addr));
+		unsigned int seq = NextGenSeq();
+
+		genMSG[0] = seq >> 24 & 0xFF;
+		genMSG[1] = seq >> 16 & 0xFF;
+		genMSG[2] = seq >> 8 & 0xFF;
+		genMSG[3] = seq & 0xFF;
+
+		// reset the Network HW watchdog timer by sending a general msg
+		sendto(sock, genMSG, sizeof(genMSG), 0, (sockaddr *)&Gen_addr, sizeof(Gen_addr));
 	}
 
 	int Hermes::SetLO2(int RecvrID, int Frequency)
