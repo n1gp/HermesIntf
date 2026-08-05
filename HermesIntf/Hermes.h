@@ -109,11 +109,14 @@ namespace HermesIntf
 		struct sockaddr_in Desired_addr;
 		struct sockaddr_in Skimmer_addr; 
 		unsigned int seq_no;
+		unsigned int gen_seq_no;
 		unsigned char Desired_mac[2];
 		HANDLE hMutex;
 		
 		unsigned int NextSeq();
+		unsigned int NextGenSeq();
 		void ResetSeq();
+		void ResetGenSeq();
 
 		//determine slave mode
 		void IsSlave();
