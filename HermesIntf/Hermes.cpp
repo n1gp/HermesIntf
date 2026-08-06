@@ -1020,7 +1020,7 @@ namespace HermesIntf
 				mac_dest = mac_dest.substr(location+1);
 				//write_text_to_log_file(mac_dest);
 				if (mac_dest.size() == 4){
-					if (sscanf((char *)&mac_dest, "%2hhX%2hhX", &Desired_mac[0], &Desired_mac[1]) == 2) {
+					if (sscanf(mac_dest.c_str(), "%2hhX%2hhX", &Desired_mac[0], &Desired_mac[1]) == 2) {
 						write_text_to_log_file("MAC Address DLL Filter found");
 						return 0;
 					}
