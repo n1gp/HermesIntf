@@ -63,9 +63,14 @@ jobs:
         path: ${{ steps.finddll.outputs.path }}
         if-no-files-found: error
 
-    - name: Attach DLL to release
+    - name: Package and attach release zip
       if: github.event_name == 'release'
       shell: pwsh
       env:
         GH_TOKEN: ${{ github.token }}
-      run: gh release upload ${{ github.event.release.tag_name }} "${{ steps.finddll.outputs.path }}" --clobber
+      run: |
+        $ver = "${{ github.event.release.tag_name }}".TrimStart('v')
+        $zip = "HermesIntf-$ver.zip"
+        Compress-Archive -Path "${{ steps.finddll.outputs.path }}","readme.txt" -DestinationPath $zip -Force
+        Write-Host "Created $zip"
+        gh release upload ${{ github.event.release.tag_name }} $zip --clobber
