@@ -10,6 +10,8 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  release:
+    types: [ published ]
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -21,7 +23,7 @@ env:
   BUILD_CONFIGURATION: Release
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -42,3 +44,28 @@ jobs:
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Locate built DLL
+      id: finddll
+      shell: pwsh
+      run: |
+        $dll = Get-ChildItem -Path . -Recurse -Filter HermesIntf.dll |
+          Where-Object { $_.FullName -match 'Release' } |
+          Select-Object -First 1
+        if (-not $dll) { throw "HermesIntf.dll not found after build" }
+        "path=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        Write-Host "Found DLL: $($dll.FullName)"
+
+    - name: Upload DLL artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: HermesIntf-dll
+        path: ${{ steps.finddll.outputs.path }}
+        if-no-files-found: error
+
+    - name: Attach DLL to release
+      if: github.event_name == 'release'
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload ${{ github.event.release.tag_name }} "${{ steps.finddll.outputs.path }}" --clobber
