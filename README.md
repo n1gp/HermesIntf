@@ -56,10 +56,6 @@ Afedri single and dual channel (firmware 228e and up), HPSDR emulation mode:
 - 1 or 2 receivers
 
 
-
-
-
-
 The ADC overload is managed using the following algorithm:
 In case of an ADC overflow  the step attenuator is incremented by one db every
 100ms until the overload goes away or we run out of the attenuation range.   In
@@ -73,7 +69,6 @@ ignored.  This prevents the skimmer from starting too many threads and trying to
 decode junk. also keeps CPU and memory consumption under control.  If you TX on
 another radio while the skimmer server is running, you can tie its PTT-out to
 pin 26 on the Hermes J16 connector.   
-
 
 
 Not yet implemented:
@@ -98,21 +93,25 @@ Please send feedback to gokoyev+k3it@gmail.com
 
 73 K3IT
 
-==========================================
-CHANGES
-==========================================
-16.6.27 - add support for Red Pitaya
-16.3.5 - remove slave mode
-15.7.9 -  8 channel Hermes Lite support https://groups.google.com/d/msg/hermes-lite/N130G9MEJwE/wfg05AgXrrUJ
-14.8.13 - Support for more hardware and firmware combinations, improved logging
-13.9.3 - added filtering by MAC or IP address (see above)
-13.8.24 - fixed sample format conversion error(!)
-13.8.23 - Hermes/Angelia - adjust 31db step attenuator(s) in response to ADC
-	  overload. 100ms/10s/db timing
-13.8.22 - Do not send samples to skimmer when PTT bit is ON (pin 26 J16)
-13.8.21 - improved AutoDiscovery on "multi-homed" PCs 
-13.8.19 - initial version
+## Changes
 
-Code snippets TNX to: Peter Parэzek (USRP code for skim server), VE3NEA, W7AY,
-openHPSDR list, Wireshark plugin: NH6Z ... ...  
-too many to list :)
+- 26.8.9 - TRX-DUO/Red Pitaya Protocol 2 fixes, P2 watchdog feed, fix MAC address DLL filter (N1GP)
+- 24.1.13 - Add Saturn support, discovery packet improvement, update to VS 2022
+- 21.7.18 - Add support for protocol 2 (N1GP)
+- 18.5.22 - Add support for variable number of receivers in board id 0x06 Hermes Lite
+- 17.7.24 - Add Orion and Anan10e, fix a typo
+- 17.7.6 - Improved integration w/ CWSL_Tee, minor bug fixes, updated device names (N6TV)
+- 17.7.5 - Fix Angelia board detection issue
+- 16.6.27 - Add support for Red Pitaya
+- 16.3.5 - Remove slave mode
+- 15.7.9 - 8 channel Hermes Lite support (https://groups.google.com/d/msg/hermes-lite/N130G9MEJwE/wfg05AgXrrUJ)
+- 14.8.13 - Support for more hardware and firmware combinations, improved logging
+- 13.9.3 - Added filtering by MAC or IP address (see above)
+- 13.8.24 - Fixed sample format conversion error(!)
+- 13.8.23 - Hermes/Angelia - adjust 31db step attenuator(s) in response to ADC overload. 100ms/10s/db timing
+- 13.8.22 - Do not send samples to skimmer when PTT bit is ON (pin 26 J16)
+- 13.8.21 - Improved AutoDiscovery on "multi-homed" PCs
+- 13.8.19 - Initial version
+
+Code snippets TNX to: Peter Parýzek (USRP code for skim server), VE3NEA, W7AY,
+openHPSDR list, Wireshark plugin: NH6Z ... too many to list :)
